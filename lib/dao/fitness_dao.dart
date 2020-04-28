@@ -18,9 +18,10 @@ class FitnessDao {
     return fitness;
   }
 
-  Future<List> getAll() async {
+  Future<List> getAll(String type) async {
     Database db = await _sqlHelper.db;
-    List listMap = await db.rawQuery("SELECT * FROM ${SqlHelper.calcTable}");
+    List listMap = await db.rawQuery(
+        "SELECT * FROM ${SqlHelper.calcTable} WHERE type_calc = '$type'");
     List<Fitness> listFitness = List();
     for (Map m in listMap) {
       listFitness.add(Fitness.fromMap(m));

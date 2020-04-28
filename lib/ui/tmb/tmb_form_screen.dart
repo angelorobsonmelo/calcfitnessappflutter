@@ -5,6 +5,10 @@ import 'package:execflutter/ui/utils/components/textfield/text_field_component.d
 import 'package:flutter/material.dart';
 import 'package:toast/toast.dart';
 
+import '../result_screen.dart';
+
+enum tmbMenuItem { tmb }
+
 class TmbFormScreen extends StatefulWidget {
   @override
   _TmbFormScreenState createState() => _TmbFormScreenState();
@@ -25,6 +29,20 @@ class _TmbFormScreenState extends State<TmbFormScreen> {
       appBar: AppBar(
         title: Text("TMB"),
         centerTitle: true,
+        actions: <Widget>[
+          PopupMenuButton<tmbMenuItem>(
+            itemBuilder: (context) => <PopupMenuEntry<tmbMenuItem>>[
+              const PopupMenuItem<tmbMenuItem>(
+                child: Text("Listar Resultados"),
+                value: tmbMenuItem.tmb,
+              )
+            ],
+            onSelected: (result) {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => ResultScreen("TMB")));
+            },
+          )
+        ],
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),

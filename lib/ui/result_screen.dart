@@ -18,7 +18,7 @@ class _ResultScreenState extends State<ResultScreen> {
   @override
   void initState() {
     super.initState();
-    _getResults();
+    _getResultsBy(widget.type);
   }
 
   @override
@@ -37,8 +37,8 @@ class _ResultScreenState extends State<ResultScreen> {
     );
   }
 
-  void _getResults() {
-    _fitnessDao.getAll().then((results) {
+  void _getResultsBy(String type) {
+    _fitnessDao.getAll(type).then((results) {
       setState(() {
         _fitness = results;
       });
