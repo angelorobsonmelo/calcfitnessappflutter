@@ -1,11 +1,12 @@
 import 'package:execflutter/dao/fitness_dao.dart';
 import 'package:execflutter/model/fitness.dart';
 import 'package:execflutter/ui/result_screen.dart';
+import 'package:execflutter/ui/utils/components/alertdialog/alert_dialog_builder.dart';
+import 'package:execflutter/ui/utils/components/textfield/text_field_component.dart';
 import 'package:flutter/material.dart';
 import 'package:toast/toast.dart';
 
 enum ImcMenuItem { imc }
-enum DialogOptions { yes, no }
 
 class ImcFormScreen extends StatefulWidget {
   @override
@@ -28,16 +29,16 @@ class _ImcFormScreenState extends State<ImcFormScreen> {
         centerTitle: true,
         actions: <Widget>[
           PopupMenuButton<ImcMenuItem>(
-            itemBuilder: (context) => <PopupMenuEntry<ImcMenuItem>>[
+            itemBuilder: (context) =>
+            <PopupMenuEntry<ImcMenuItem>>[
               const PopupMenuItem<ImcMenuItem>(
                 child: Text("Listar Resultados"),
                 value: ImcMenuItem.imc,
               )
             ],
             onSelected: (result) {
-                 Navigator.push(context, MaterialPageRoute(
-                   builder: (context) => ResultScreen("IMC")
-                 ));
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => ResultScreen("IMC")));
             },
           )
         ],
@@ -50,22 +51,10 @@ class _ImcFormScreenState extends State<ImcFormScreen> {
             Text(
                 "O IMC é reconhecido como padrão internacional para avaliar o grau de sobrepeso e obesidade. É calculado dividindo o peso (em kg) pela altura ao quadrado (em metros)."),
             const SizedBox(height: 30),
-            TextField(
-              controller: _heightController,
-              focusNode: _heightFocus,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: "Altura",
-              ),
-            ),
+            buildNumericTextField("Altura", _heightController,
+                focusNode: _heightFocus),
             const SizedBox(height: 10),
-            TextField(
-              controller: _weightController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: "Peso",
-              ),
-            ),
+            buildNumericTextField("Peso", _weightController),
             const SizedBox(height: 30),
             ButtonTheme(
               minWidth: 200.0,
@@ -73,27 +62,7 @@ class _ImcFormScreenState extends State<ImcFormScreen> {
               child: RaisedButton(
                 onPressed: () {
                   if (_validate()) {
-                    int heigth = int.parse(_heightController.text);
-                    double weigth = double.parse(_weightController.text);
-                    double imc = calculate(heigth, weigth);
-                    String imcResult = _imcResponse(imc);
-                    Fitness model = Fitness.full("IMC", imc, DateTime.now().toIso8601String());
-
-                    alertDialogComponent(
-                        imcResult,
-                        (result) => {
-                              if (result == DialogOptions.yes)
-                                {
-                                  _fitnessDao.save(model).then((fitness) {
-                                    if (fitness.id != null) {
-                                      resetForm();
-                                      Toast.show("Salvo com sucesso!", context,
-                                          duration: Toast.LENGTH_LONG, gravity: Toast.CENTER);
-                                    }
-                                  })
-                                }
-                            });
-
+                    _handleImc(context);
                     return;
                   }
 
@@ -112,40 +81,45 @@ class _ImcFormScreenState extends State<ImcFormScreen> {
     );
   }
 
-  void resetForm() {
+  void _handleImc(BuildContext context) {
+    double imc = _getImc();
+    String imcResult = _imcResponse(imc);
+
+    Fitness model = Fitness.full("IMC", imc, DateTime.now().toIso8601String());
+
+    _showAlertDialog(context, imcResult, model, (result) {
+      if (result == DialogOptions.yes) {
+        _fitnessDao.save(model).then((fitness) {
+          if (fitness.id != null) {
+            _resetForm();
+            Toast.show("Salvo com sucesso!", context,
+                duration: Toast.LENGTH_LONG, gravity: Toast.CENTER);
+          }
+        });
+      }
+    });
+  }
+
+  double _getImc() {
+    int heigth = int.parse(_heightController.text);
+    double weigth = double.parse(_weightController.text);
+    double imc = calculate(heigth, weigth);
+    return imc;
+  }
+
+  void _showAlertDialog(BuildContext context, String imcResult, Fitness model,
+      Function function) {
+    alertDialogComponent(
+        "IMC", context, imcResult, (result) => {function(result)});
+  }
+
+  void _resetForm() {
     setState(() {
       _weightController.text = "";
       _heightController.text = "";
     });
 
     FocusScope.of(context).requestFocus(_heightFocus);
-  }
-
-  void alertDialogComponent(String result, Function f) {
-    showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text("Resultado IMC"),
-            content: Text("Seu IMC está $result. Deseja salvar?"),
-            actions: <Widget>[
-              FlatButton(
-                child: Text("Sim"),
-                onPressed: () {
-                  Navigator.pop(context);
-                  f(DialogOptions.yes);
-                },
-              ),
-              FlatButton(
-                child: Text("Não"),
-                onPressed: () {
-                  Navigator.pop(context);
-                  f(DialogOptions.no);
-                },
-              )
-            ],
-          );
-        });
   }
 
   bool _validate() {

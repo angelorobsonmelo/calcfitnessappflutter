@@ -1,4 +1,5 @@
 import 'package:execflutter/ui/imc/imc_form_screen.dart';
+import 'package:execflutter/ui/tmb/tmb_form_screen.dart';
 import 'package:flutter/material.dart';
 
 class OptionsScreen extends StatelessWidget {
@@ -41,7 +42,8 @@ class OptionsScreen extends StatelessWidget {
                   return;
                 }
 
-
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => TmbFormScreen()));
               },
             );
           }),
